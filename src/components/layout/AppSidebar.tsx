@@ -38,7 +38,7 @@ const adminLinks = [
 ];
 
 export default function AppSidebar() {
-  const { role, profile, signOut } = useAuth();
+  const { role, profile, user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -81,8 +81,8 @@ export default function AppSidebar() {
 
       <div className="p-4 border-t border-sidebar-border">
         <div className="mb-3 px-4">
-          <p className="text-sm font-medium truncate">{profile?.full_name || 'User'}</p>
-          <p className="text-xs opacity-70 truncate">{profile?.email}</p>
+          <p className="text-sm font-medium truncate">{profile?.full_name || user?.email || 'User'}</p>
+          <p className="text-xs opacity-70 truncate">{user?.email}</p>
         </div>
         <button
           onClick={() => { signOut(); navigate('/auth'); }}

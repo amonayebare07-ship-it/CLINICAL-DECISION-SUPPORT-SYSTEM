@@ -185,10 +185,10 @@ export default function Dashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
             <h1 className="font-serif text-2xl font-bold text-foreground">
-              Hello, {profile?.full_name?.split(' ')[0] || 'Nurse'} 👋
+              Welcome back, {profile?.full_name?.split(' ')[0] || user?.email || 'User'} 👋
             </h1>
             <p className="text-muted-foreground text-sm">
-              There is the latest update for the last 7 days. Check now
+              Ready for another great day? Here's your clinical overview.
             </p>
           </div>
           <div className="flex items-center gap-2">
