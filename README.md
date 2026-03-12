@@ -1,10 +1,11 @@
-# Bishop's Health Hub
+# Clinical Decision Support System
 
-Bishop's Health Hub is a comprehensive healthcare management and modern clinic administrative platform. Built to streamline day-to-day medical facility operations, this application offers intuitive interfaces for managing patient journeys, staff coordination, and medical inventory.
+The Clinical Decision Support System is an advanced healthcare management platform designed to assist medical professionals in diagnosing patients and recommending treatments. It analyzes symptoms, suggests diagnoses, and provides treatment recommendations, integrating seamlessly into the staff dashboard to streamline daily medical operations.
 
 ## Features
 
 - **Actionable Dashboard**: Get a bird's-eye view of clinic operations, ongoing consultations, and patient metrics.
+- **Decision Support Module**: Analyze symptoms to receive suggested diagnoses and tailored treatment recommendations.
 - **Patient Queue Management**: Seamlessly handle checking in patients, tracking waiting times, and triaging.
 - **Consultations & Records**: Document patient visits, track histories, and maintain detailed electronic health records.
 - **Appointments System**: Schedule, reschedule, and manage upcoming patient appointments.
@@ -34,12 +35,12 @@ Ensure you have [Node.js](https://nodejs.org/) installed before proceeding.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/amonayebare07-ship-it/bishop-s-health-hub.git
+   git clone https://github.com/amonayebare07-ship-it/CLINICAL-DECISION-SUPPORT-SYSTEM.git
    ```
 
 2. Navigate directly into the project folder:
    ```bash
-   cd bishop-s-health-hub
+   cd CLINICAL-DECISION-SUPPORT-SYSTEM
    ```
 
 3. Install the application dependencies:
