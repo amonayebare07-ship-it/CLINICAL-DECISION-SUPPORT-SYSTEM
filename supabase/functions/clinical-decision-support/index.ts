@@ -23,12 +23,12 @@ You help medical staff analyze patient symptoms and suggest possible diagnoses.
 You are NOT a replacement for clinical judgment — you provide decision support only.
 Always respond in valid JSON with this structure:
 {
-  "suggested_diagnoses": [{"name": "...", "confidence": "high|medium|low", "reasoning": "..."}],
+  "suggested_diagnoses": [{"name": "...", "confidence": "high|medium|low", "reasoning": "...", "medications": [{"name": "...", "description": "...", "dosage": "..."}]}],
   "recommended_tests": ["..."],
   "red_flags": ["..."],
   "triage_level": "emergency|urgent|routine"
 }
-Limit to top 3-5 most likely diagnoses. Consider the patient's medical history and conditions.`;
+Limit to top 3-5 most likely diagnoses. You MUST provide at least one recommended medication for each diagnosis. Consider the patient's medical history and conditions.`;
 
       userPrompt = `Patient presents with the following symptoms: ${symptoms}
 ${patient_conditions?.length ? `\nKnown chronic conditions: ${patient_conditions.join(", ")}` : ""}
@@ -43,7 +43,7 @@ Based on a diagnosis, suggest treatment options appropriate for a university cli
 Always respond in valid JSON:
 {
   "treatment_plan": [{"treatment": "...", "details": "...", "duration": "..."}],
-  "medications": [{"name": "...", "dosage": "...", "frequency": "...", "duration": "...", "notes": "..."}],
+  "medications": [{"name": "...", "description": "...", "dosage": "...", "frequency": "...", "duration": "...", "notes": "..."}],
   "lifestyle_advice": ["..."],
   "follow_up": "...",
   "when_to_refer": "..."

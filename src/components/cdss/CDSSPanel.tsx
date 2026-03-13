@@ -146,6 +146,29 @@ export default function CDSSPanel({
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">{d.reasoning}</p>
+                {d.medications?.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    <p className="text-xs font-semibold text-primary">Recommended Medications:</p>
+                    {d.medications.map((m: any, j: number) => (
+                      <div key={j} className="text-xs bg-muted/50 p-2 rounded-md border border-border/50">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{m.name}</span>
+                          {onSuggestPrescription && (
+                            <Button type="button" size="sm" variant="ghost" className="h-5 text-[10px] text-primary"
+                              onClick={() => {
+                                onSuggestPrescription(`${m.name} ${m.dosage}`);
+                                if (onSuggestTreatment) onSuggestTreatment(`${m.name} for ${d.name}`);
+                              }}>
+                              Add to Rx
+                            </Button>
+                          )}
+                        </div>
+                        {m.description && <p className="text-muted-foreground mt-0.5">{m.description}</p>}
+                        {m.dosage && <p className="text-muted-foreground font-medium mt-0.5">Dosage: {m.dosage}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             {analysisResult.red_flags?.length > 0 && (
@@ -204,8 +227,9 @@ export default function CDSSPanel({
                     </Button>
                   )}
                 </div>
+                {m.description && <p className="text-muted-foreground mt-0.5 mb-1">{m.description}</p>}
                 <p className="text-muted-foreground">{m.dosage} — {m.frequency} — {m.duration}</p>
-                {m.notes && <p className="text-muted-foreground italic">{m.notes}</p>}
+                {m.notes && <p className="text-muted-foreground italic mt-0.5">{m.notes}</p>}
               </div>
             ))}
             {treatmentResult.when_to_refer && (
