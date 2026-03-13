@@ -21,14 +21,14 @@ serve(async (req) => {
       systemPrompt = `You are a Clinical Decision Support System (CDSS) for a university sick bay at Bishop Barham University College. 
 You help medical staff analyze patient symptoms and suggest possible diagnoses. 
 You are NOT a replacement for clinical judgment — you provide decision support only.
-Always respond in valid JSON with this structure:
 {
   "suggested_diagnoses": [{"name": "...", "confidence": "high|medium|low", "reasoning": "...", "medications": [{"name": "...", "description": "...", "dosage": "..."}]}],
   "recommended_tests": ["..."],
   "red_flags": ["..."],
-  "triage_level": "emergency|urgent|routine"
+  "triage_level": "emergency|urgent|routine",
+  "symptomatic_relief": [{"symptom": "...", "medication": "...", "dosage": "...", "reasoning": "..."}]
 }
-Limit to top 3-5 most likely diagnoses. You MUST provide at least one recommended medication for each diagnosis. Consider the patient's medical history and conditions.`;
+Limit to top 3-5 most likely diagnoses. For EACH diagnosis, you MUST provide at least one recommended medication in the "medications" array. If no specific prescription is needed, suggest over-the-counter relief (e.g., Paracetamol, Oral Rehydration Salts). Also provide specific symptomatic relief for each individual symptom reported. Consider the patient's medical history and conditions. Use only valid JSON.`;
 
       userPrompt = `Patient presents with the following symptoms: ${symptoms}
 ${patient_conditions?.length ? `\nKnown chronic conditions: ${patient_conditions.join(", ")}` : ""}
@@ -50,13 +50,13 @@ Always respond in valid JSON:
 }
 Consider patient allergies and conditions when recommending medications.`;
 
-      userPrompt = `Diagnosis: ${diagnosis}
+      userPrompt = `Diagnosis: ${diagnosis || "Not specified (base on symptoms)"}
 Symptoms: ${symptoms || "Not specified"}
 ${patient_allergies?.length ? `\nPatient allergies: ${patient_allergies.join(", ")}` : ""}
 ${patient_conditions?.length ? `\nChronic conditions: ${patient_conditions.join(", ")}` : ""}
 ${current_medications?.length ? `\nCurrently taking: ${current_medications.join(", ")}` : ""}
 
-Recommend appropriate treatment for a university sick bay setting.`;
+Recommend appropriate treatment for a university sick bay setting. If diagnosis is missing or unclear, base your recommendations on the provided symptoms and potential differential diagnoses.`;
 
     } else if (action === "check_drug_interactions") {
       systemPrompt = `You are a drug interaction and allergy checker for a Clinical Decision Support System.

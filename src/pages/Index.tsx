@@ -66,7 +66,7 @@ export default function Index() {
             Smarter Clinical<br />Decisions
           </h2>
           <p className="text-xl text-white/90 max-w-2xl mx-auto mb-10 drop-shadow">
-            Bishop Barham University College Kabale's Clinical Decision Support System. Report illnesses, receive guided clinical insights, and access medical records — all in one place.
+            Bishop Barham University College Kabale's Clinical Decision Support System. Report illnesses, receive guided clinical insights, and access medical records all in one place.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" onClick={() => navigate('/auth')} className="text-lg px-8 py-6">
@@ -115,7 +115,7 @@ export default function Index() {
       {/* Footer */}
       <footer className="py-10 px-6 border-t border-border">
         <div className="container mx-auto text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Bishop Barham University College Kabale — Clinical Decision Support System</p>
+          <p>&copy; {new Date().getFullYear()} Bishop Barham University College Kabale Clinical Decision Support System</p>
         </div>
       </footer>
     </div>

@@ -1,0 +1,30 @@
+-- Seed common medications for university sick bay
+INSERT INTO public.medication_inventory (name, description, quantity, unit, reorder_level)
+VALUES 
+  ('Paracetamol 500mg', 'Analgesic and antipyretic for pain and fever.', 1000, 'tablets', 200),
+  ('Ibuprofen 400mg', 'Non-steroidal anti-inflammatory drug (NSAID).', 500, 'tablets', 100),
+  ('Diclofenac 50mg', 'For relief of more severe pain and inflammation.', 300, 'tablets', 50),
+  ('Amoxicillin 500mg', 'Broad-spectrum penicillin antibiotic.', 500, 'capsules', 100),
+  ('Amoxiclav 625mg', 'Combination antibiotic for resistant bacteria.', 200, 'tablets', 50),
+  ('Azithromycin 500mg', 'Macrolide antibiotic for respiratory and skin infections.', 100, 'tablets', 20),
+  ('Ciprofloxacin 500mg', 'Fluoroquinolone antibiotic for UTIs and GI infections.', 300, 'tablets', 50),
+  ('Ceftriaxone 1g', 'Injectable third-generation cephalosporin antibiotic.', 50, 'vials', 10),
+  ('Doxycycline 100mg', 'Antibiotic for various infections and malaria prophylaxis.', 400, 'capsules', 50),
+  ('Artemether/Lumefantrine (Coartem)', 'First-line ACT for uncomplicated malaria.', 150, 'packs', 30),
+  ('Quinine Sulphate 300mg', 'Used for severe malaria or as a second-line treatment.', 200, 'tablets', 40),
+  ('Cetirizine 10mg', 'Non-sedating antihistamine for allergies.', 400, 'tablets', 50),
+  ('Loratadine 10mg', 'Long-acting antihistamine.', 300, 'tablets', 50),
+  ('Chlorpheniramine 4mg', 'Antihistamine with sedative effects (Piriton).', 500, 'tablets', 100),
+  ('Oral Rehydration Salts (ORS)', 'For rehydration in case of diarrhea or vomiting.', 200, 'sachets', 50),
+  ('Zinc Sulfate 20mg', 'Supplement for pediatric diarrhea management.', 100, 'tablets', 20),
+  ('Metronidazole 400mg', 'Antibiotic for anaerobic and protozoal infections.', 300, 'tablets', 50),
+  ('Omeprazole 20mg', 'Proton pump inhibitor for gastritis and ulcers.', 400, 'capsules', 50),
+  ('Magnesium Trisilicate', 'Antacid for heartburn and indigestion.', 200, 'bottles', 30),
+  ('Salbutamol 2mg', 'Bronchodilator for asthma relief.', 200, 'tablets', 40),
+  ('Salbutamol Inhaler (Ventolin)', 'Rescue inhaler for acute asthma symptoms.', 30, 'inhalers', 10),
+  ('Hydrocortisone Cream 1%', 'Mild corticosteroid for skin inflammation.', 50, 'tubes', 10),
+  ('Silver Sulphadiazine Cream', 'Antiseptic for burns.', 30, 'tubes', 10),
+  ('Multivitamins', 'General dietary supplement.', 1000, 'tablets', 200),
+  ('Folic Acid 5mg', 'Vitamin supplement for anemia prevention.', 500, 'tablets', 100),
+  ('Albendazole 400mg', 'Deworming medication.', 200, 'tablets', 50);
+ON CONFLICT DO NOTHING;

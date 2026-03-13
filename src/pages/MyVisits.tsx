@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { FileText, ArrowRightLeft, AlertCircle, Upload, Loader2, File, Download } from 'lucide-react';
+import { FileText, ArrowRightLeft, AlertCircle, Upload, Loader2, File, Download, Stethoscope, Pill, ClipboardList, Info } from 'lucide-react';
 
 export default function MyVisits() {
   const { user } = useAuth();
@@ -124,39 +124,84 @@ export default function MyVisits() {
                     </div>
                   </CardHeader>
                   {record && (
-                    <CardContent className="space-y-3">
-                      {record.diagnosis && (
-                        <div><span className="text-sm font-medium text-foreground">Diagnosis:</span> <span className="text-sm text-muted-foreground">{record.diagnosis}</span></div>
-                      )}
-                      {record.treatment && (
-                        <div><span className="text-sm font-medium text-foreground">Treatment:</span> <span className="text-sm text-muted-foreground">{record.treatment}</span></div>
-                      )}
-                      {record.prescription && (
-                        <div><span className="text-sm font-medium text-foreground">Prescription:</span> <span className="text-sm text-muted-foreground">{record.prescription}</span></div>
-                      )}
-                      {record.notes && (
-                        <div><span className="text-sm font-medium text-foreground">Notes:</span> <span className="text-sm text-muted-foreground">{record.notes}</span></div>
-                      )}
-                      {record.follow_up_date && (
-                        <div><span className="text-sm font-medium text-foreground">Follow-up:</span> <span className="text-sm text-muted-foreground">{format(new Date(record.follow_up_date), 'MMMM dd, yyyy')}</span></div>
-                      )}
+                    <CardContent className="space-y-6 pt-0">
+                      <div className="bg-muted/30 rounded-xl p-6 border border-border/50 space-y-4">
+                        <div className="flex items-center gap-2 text-primary font-serif font-semibold border-b border-primary/20 pb-2 mb-4">
+                          <Stethoscope className="w-5 h-5" />
+                          Clinical Feedback
+                        </div>
+                        
+                        {record.diagnosis && (
+                          <div className="flex gap-3">
+                            <Info className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                            <div>
+                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Diagnosis</p>
+                              <p className="text-sm font-medium text-foreground">{record.diagnosis}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {record.treatment && (
+                          <div className="flex gap-3">
+                            <ClipboardList className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                            <div>
+                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Treatment Given</p>
+                              <p className="text-sm text-foreground">{record.treatment}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {record.prescription && (
+                          <div className="flex gap-3">
+                            <Pill className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                            <div>
+                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Prescription</p>
+                              <p className="text-sm font-medium text-primary bg-primary/5 rounded px-2 py-1 mt-1 inline-block">
+                                {record.prescription}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {record.notes && (
+                          <div className="mt-4 pt-4 border-t border-border/50">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Additional Notes</p>
+                            <p className="text-sm text-muted-foreground italic leading-relaxed">"{record.notes}"</p>
+                          </div>
+                        )}
+
+                        {record.follow_up_date && (
+                          <div className="mt-2 text-xs font-medium text-destructive bg-destructive/5 rounded-full px-3 py-1 inline-flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            Follow-up required on: {format(new Date(record.follow_up_date), 'MMMM dd, yyyy')}
+                          </div>
+                        )}
+                      </div>
 
                       {record.is_referred && (
-                        <div className="mt-3 border border-warning/30 bg-warning/5 rounded-lg p-4 space-y-2">
-                          <div className="flex items-center gap-2 text-warning font-semibold">
-                            <ArrowRightLeft className="w-4 h-4" />
-                            Referral Notice
+                        <div className="mt-3 border border-warning/30 bg-warning/5 rounded-xl p-5 space-y-3">
+                          <div className="flex items-center gap-2 text-warning font-serif font-bold text-base">
+                            <ArrowRightLeft className="w-5 h-5" />
+                            Hospital Referral Notice
                           </div>
-                          <div><span className="text-sm font-medium text-foreground">Hospital:</span> <span className="text-sm text-muted-foreground">{record.referral_hospital}</span></div>
-                          <div><span className="text-sm font-medium text-foreground">Reason:</span> <span className="text-sm text-muted-foreground">{record.referral_reason}</span></div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Target Hospital</p>
+                              <p className="text-sm font-semibold text-foreground">{record.referral_hospital}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Reason for Referral</p>
+                              <p className="text-sm text-foreground">{record.referral_reason}</p>
+                            </div>
+                          </div>
                           {record.referral_notes && (
-                            <div className="flex items-start gap-2 mt-2 bg-background/50 rounded p-3 border border-border">
-                              <AlertCircle className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                              <p className="text-sm text-muted-foreground">{record.referral_notes}</p>
+                            <div className="bg-background/80 rounded-lg p-3 border border-warning/20">
+                              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Referral Instructions</p>
+                              <p className="text-sm text-muted-foreground leading-relaxed">{record.referral_notes}</p>
                             </div>
                           )}
-                          <Button size="sm" variant="outline" className="mt-2" onClick={() => setUploadOpen(visit.id)}>
-                            <Upload className="w-3.5 h-3.5 mr-1" /> Upload Hospital Document
+                          <Button size="sm" variant="outline" className="w-full mt-2 border-warning/30 hover:bg-warning/10" onClick={() => setUploadOpen(visit.id)}>
+                            <Upload className="w-3.5 h-3.5 mr-2" /> Upload Hospital Findings
                           </Button>
                         </div>
                       )}

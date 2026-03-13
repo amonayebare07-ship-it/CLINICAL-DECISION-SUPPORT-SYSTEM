@@ -10,7 +10,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Send } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+
+const COMMON_SYMPTOMS = [
+  'Fever', 'Headache', 'Cough', 'Sore Throat', 'Body Aches', 
+  'Fatigue', 'Nausea', 'Vomiting', 'Diarrhea', 'Stomach Pain', 
+  'Dizziness', 'Rash', 'Shortness of Breath', 'Chest Pain',
+  'Joint Pain', 'Loss of Taste/Smell'
+];
 
 export default function ReportIllness() {
   const { user } = useAuth();
@@ -20,6 +28,19 @@ export default function ReportIllness() {
   const [priority, setPriority] = useState('normal');
   const [location, setLocation] = useState('');
   const [areaOfResidence, setAreaOfResidence] = useState('');
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+
+  const toggleSymptom = (symptom: string) => {
+    setSelectedSymptoms(prev => {
+      const next = prev.includes(symptom) 
+        ? prev.filter(s => s !== symptom)
+        : [...prev, symptom];
+      
+      // Update the complaint field automatically
+      setComplaint(next.join(', '));
+      return next;
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,8 +77,24 @@ export default function ReportIllness() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-4">
+                <Label>Select Symptoms</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {COMMON_SYMPTOMS.map(s => (
+                    <Badge
+                      key={s}
+                      variant={selectedSymptoms.includes(s) ? 'default' : 'outline'}
+                      className="cursor-pointer py-2 justify-center hover:bg-primary/10 transition-colors"
+                      onClick={() => toggleSymptom(s)}
+                    >
+                      {s}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="complaint">Chief Complaint / Symptoms *</Label>
+                <Label htmlFor="complaint">Chief Complaint / Detailed Symptoms *</Label>
                 <Textarea
                   id="complaint"
                   value={complaint}

@@ -18,12 +18,13 @@ interface CDSSPanelProps {
   onSuggestDiagnosis?: (diagnosis: string) => void;
   onSuggestTreatment?: (treatment: string) => void;
   onSuggestPrescription?: (prescription: string) => void;
+  onAutoFill?: (data: { diagnosis?: string; treatment?: string; prescription?: string }) => void;
 }
 
 export default function CDSSPanel({
   symptoms, diagnosis, prescription, patientId,
   allergies, conditions, currentMedications, medicalHistory,
-  onSuggestDiagnosis, onSuggestTreatment, onSuggestPrescription,
+  onSuggestDiagnosis, onSuggestTreatment, onSuggestPrescription, onAutoFill,
 }: CDSSPanelProps) {
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [treatmentResult, setTreatmentResult] = useState<any>(null);
@@ -47,6 +48,8 @@ export default function CDSSPanel({
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+
+      console.log(`CDSS ${action} result:`, data.result);
 
       if (action === 'analyze_symptoms') setAnalysisResult(data.result);
       else if (action === 'recommend_treatment') setTreatmentResult(data.result);
@@ -83,13 +86,24 @@ export default function CDSSPanel({
           {loading === 'analyze_symptoms' ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Stethoscope className="w-3 h-3 mr-1" />}
           Analyze Symptoms
         </Button>
-        <Button type="button" size="sm" variant="outline" disabled={!diagnosis || !!loading}
-          onClick={() => callCDSS('recommend_treatment')}>
+        <Button type="button" size="sm" variant="outline" disabled={!!loading}
+          onClick={() => {
+            if (!diagnosis) {
+              toast.info('Suggesting treatment based on provided symptoms...');
+            }
+            callCDSS('recommend_treatment');
+          }}>
           {loading === 'recommend_treatment' ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Pill className="w-3 h-3 mr-1" />}
           Suggest Treatment
         </Button>
-        <Button type="button" size="sm" variant="outline" disabled={!prescription || !!loading}
-          onClick={() => callCDSS('check_drug_interactions')}>
+        <Button type="button" size="sm" variant="outline" disabled={!!loading}
+          onClick={() => {
+            if (!prescription) {
+              toast.error('Please enter a prescription to check for interactions.');
+              return;
+            }
+            callCDSS('check_drug_interactions');
+          }}>
           {loading === 'check_drug_interactions' ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <ShieldAlert className="w-3 h-3 mr-1" />}
           Check Interactions
         </Button>
@@ -111,6 +125,45 @@ export default function CDSSPanel({
         </div>
       )}
 
+      {/* Smart Auto-fill Button */}
+      {(analysisResult || treatmentResult) && onAutoFill && (
+        <Button 
+          type="button" 
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm flex items-center justify-center gap-2"
+          onClick={() => {
+            const data: any = {};
+            
+            if (analysisResult?.suggested_diagnoses?.length > 0) {
+              const topDiagnosis = analysisResult.suggested_diagnoses[0];
+              data.diagnosis = topDiagnosis.name;
+              
+              if (topDiagnosis.medications?.length > 0) {
+                data.prescription = topDiagnosis.medications.map((m: any) => `${m.name} ${m.dosage || ''}`).join('\n');
+              }
+            }
+
+            if (treatmentResult?.treatment_plan?.length > 0) {
+              data.treatment = treatmentResult.treatment_plan.map((t: any) => t.details).join('\n');
+            }
+
+            if (treatmentResult?.medications?.length > 0) {
+              const meds = treatmentResult.medications.map((m: any) => `${m.name} ${m.dosage} ${m.frequency} for ${m.duration}`).join('\n');
+              data.prescription = data.prescription ? `${data.prescription}\n${meds}` : meds;
+            }
+
+            if (analysisResult?.symptomatic_relief?.length > 0) {
+              const symptomsMeds = analysisResult.symptomatic_relief.map((s: any) => `${s.medication} ${s.dosage || ''}`).join('\n');
+              data.prescription = data.prescription ? `${data.prescription}\n${symptomsMeds}` : symptomsMeds;
+            }
+
+            onAutoFill(data);
+            toast.success('Record auto-filled with AI recommendations');
+          }}
+        >
+          <Brain className="w-4 h-4" /> Smart Auto-fill Record
+        </Button>
+      )}
+
       {/* Symptom Analysis Results */}
       {analysisResult && (
         <Card className="border-primary/20">
@@ -129,48 +182,51 @@ export default function CDSSPanel({
                 Triage: {analysisResult.triage_level}
               </Badge>
             )}
-            {analysisResult.suggested_diagnoses?.map((d: any, i: number) => (
-              <div key={i} className="bg-background rounded-md p-3 border border-border/50">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-sm">{d.name}</span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={`text-xs ${confidenceColor(d.confidence)}`}>
-                      {d.confidence}
-                    </Badge>
-                    {onSuggestDiagnosis && (
-                      <Button type="button" size="sm" variant="ghost" className="h-6 text-xs text-primary"
-                        onClick={() => onSuggestDiagnosis(d.name)}>
-                        Use
-                      </Button>
-                    )}
+            {analysisResult.suggested_diagnoses?.map((d: any, i: number) => {
+              const meds = d.medications || d.medication || [];
+              return (
+                <div key={i} className="bg-background rounded-md p-3 border border-border/50">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-sm">{d.name}</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={`text-xs ${confidenceColor(d.confidence)}`}>
+                        {d.confidence}
+                      </Badge>
+                      {onSuggestDiagnosis && (
+                        <Button type="button" size="sm" variant="ghost" className="h-6 text-xs text-primary"
+                          onClick={() => onSuggestDiagnosis(d.name)}>
+                          Use
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <p className="text-xs text-muted-foreground">{d.reasoning}</p>
-                {d.medications?.length > 0 && (
-                  <div className="mt-2 space-y-1">
-                    <p className="text-xs font-semibold text-primary">Recommended Medications:</p>
-                    {d.medications.map((m: any, j: number) => (
-                      <div key={j} className="text-xs bg-muted/50 p-2 rounded-md border border-border/50">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{m.name}</span>
-                          {onSuggestPrescription && (
-                            <Button type="button" size="sm" variant="ghost" className="h-5 text-[10px] text-primary"
-                              onClick={() => {
-                                onSuggestPrescription(`${m.name} ${m.dosage}`);
-                                if (onSuggestTreatment) onSuggestTreatment(`${m.name} for ${d.name}`);
-                              }}>
-                              Add to Rx
-                            </Button>
-                          )}
+                  <p className="text-xs text-muted-foreground">{d.reasoning}</p>
+                  {meds.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      <p className="text-xs font-semibold text-primary">Recommended Medications:</p>
+                      {meds.map((m: any, j: number) => (
+                        <div key={j} className="text-xs bg-muted/50 p-2 rounded-md border border-border/50">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">{m.name}</span>
+                            {onSuggestPrescription && (
+                              <Button type="button" size="sm" variant="ghost" className="h-5 text-[10px] text-primary"
+                                onClick={() => {
+                                  onSuggestPrescription(`${m.name} ${m.dosage || ''}`);
+                                  if (onSuggestTreatment) onSuggestTreatment(`${m.name} for ${d.name}`);
+                                }}>
+                                Add to Rx
+                              </Button>
+                            )}
+                          </div>
+                          {m.description && <p className="text-muted-foreground mt-0.5">{m.description}</p>}
+                          {m.dosage && <p className="text-muted-foreground font-medium mt-0.5">Dosage: {m.dosage}</p>}
                         </div>
-                        {m.description && <p className="text-muted-foreground mt-0.5">{m.description}</p>}
-                        {m.dosage && <p className="text-muted-foreground font-medium mt-0.5">Dosage: {m.dosage}</p>}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             {analysisResult.red_flags?.length > 0 && (
               <div className="bg-destructive/5 rounded-md p-3 border border-destructive/20">
                 <p className="text-xs font-medium text-destructive flex items-center gap-1 mb-1">
@@ -184,8 +240,32 @@ export default function CDSSPanel({
               </div>
             )}
             {analysisResult.recommended_tests?.length > 0 && (
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground pb-2 border-b border-border/50">
                 <span className="font-medium">Recommended tests:</span> {analysisResult.recommended_tests.join(", ")}
+              </div>
+            )}
+            {analysisResult.symptomatic_relief?.length > 0 && (
+              <div className="pt-2">
+                <p className="text-xs font-semibold text-primary mb-2 flex items-center gap-1">
+                  <Activity className="w-3 h-3" /> Symptomatic Relief
+                </p>
+                <div className="space-y-2">
+                  {analysisResult.symptomatic_relief.map((s: any, i: number) => (
+                    <div key={i} className="bg-background rounded-md p-2 border border-border/50 text-xs">
+                      <div className="flex items-center justify-between font-medium">
+                        <span>{s.medication}</span>
+                        {onSuggestPrescription && (
+                          <Button type="button" size="sm" variant="ghost" className="h-5 text-[10px] text-primary"
+                            onClick={() => onSuggestPrescription(`${s.medication} ${s.dosage || ''}`)}>
+                            Add to Rx
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-muted-foreground text-[10px]">For: {s.symptom}</p>
+                      {s.reasoning && <p className="text-muted-foreground italic mt-1">{s.reasoning}</p>}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </CardContent>

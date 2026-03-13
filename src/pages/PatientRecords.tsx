@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { Search, FileText, User, Loader2, Plus, StickyNote, Pencil, Trash2, UserCog, File, Download, AlertTriangle, Printer } from 'lucide-react';
+import { Search, FileText, User, Loader2, Plus, StickyNote, Pencil, Trash2, UserCog, File, Download, AlertTriangle, Printer, ChevronLeft, Users } from 'lucide-react';
 import AllergyManager from '@/components/cdss/AllergyManager';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
@@ -20,6 +20,7 @@ export default function PatientRecords() {
   const [patients, setPatients] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [showSidebar, setShowSidebar] = useState(true);
   const [records, setRecords] = useState<any[]>([]);
   const [visits, setVisits] = useState<any[]>([]);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -43,6 +44,7 @@ export default function PatientRecords() {
 
   async function selectPatient(patient: any) {
     setSelectedPatient(patient);
+    setShowSidebar(false);
     const [recordsRes, visitsRes, docsRes] = await Promise.all([
       supabase.from('medical_records').select('*').eq('patient_id', patient.user_id).order('created_at', { ascending: false }),
       supabase.from('visits').select('*').eq('patient_id', patient.user_id).order('created_at', { ascending: false }),
@@ -70,6 +72,15 @@ export default function PatientRecords() {
       setNoteOpen(false);
       setNoteForm({ symptoms: '', diagnosis: '', treatment: '', prescription: '', notes: '', follow_up_date: '' });
       selectPatient(selectedPatient);
+
+      // Notify student
+      await supabase.from('notifications').insert({
+        user_id: selectedPatient.user_id,
+        title: 'New Clinical Notes Added',
+        message: `New clinical notes have been added to your record for the visit on ${format(new Date(selectedVisit.created_at), 'MMM dd')}.`,
+        type: 'info',
+        link: '/my-visits'
+      });
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -106,6 +117,15 @@ export default function PatientRecords() {
       setEditingRecord(null);
       setNoteForm({ symptoms: '', diagnosis: '', treatment: '', prescription: '', notes: '', follow_up_date: '' });
       selectPatient(selectedPatient);
+
+      // Notify student
+      await supabase.from('notifications').insert({
+        user_id: selectedPatient.user_id,
+        title: 'Clinical Record Updated',
+        message: `A clinical record in your visit history has been updated.`,
+        type: 'info',
+        link: '/my-visits'
+      });
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -195,10 +215,15 @@ export default function PatientRecords() {
   return (
     <DashboardLayout>
       <div className="animate-fade-in">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-4 mb-2">
+          {!showSidebar && (
+            <Button variant="ghost" size="icon" onClick={() => setShowSidebar(true)} className="h-10 w-10">
+              <ChevronLeft className="w-6 h-6" />
+            </Button>
+          )}
           <h1 className="font-serif text-3xl font-bold">Patient Records</h1>
           {selectedPatient && records.length > 0 && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 ml-auto">
               <Button variant="outline" size="sm" onClick={() => window.print()}>
                 <Printer className="w-4 h-4 mr-2" /> Print
               </Button>
@@ -215,9 +240,9 @@ export default function PatientRecords() {
         </div>
         <p className="text-muted-foreground mb-8">View patient details and write consultation notes</p>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
           {/* Patient List */}
-          <div className="lg:col-span-1 space-y-4">
+          <div className={`${showSidebar ? 'lg:col-span-1 block' : 'hidden'} space-y-4`}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -227,14 +252,14 @@ export default function PatientRecords() {
                 className="pl-10"
               />
             </div>
-            <div className="space-y-2 max-h-[600px] overflow-y-auto">
+            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
               {filtered.map(patient => (
                 <button
                   key={patient.id}
                   onClick={() => selectPatient(patient)}
-                  className={`w-full text-left p-4 rounded-xl border transition-colors ${
+                  className={`w-full text-left p-4 rounded-xl border transition-all duration-200 ${
                     selectedPatient?.id === patient.id
-                      ? 'bg-primary/10 border-primary/30'
+                      ? 'bg-primary/10 border-primary/40 shadow-sm'
                       : 'bg-card border-border hover:bg-muted/30'
                   }`}
                 >
@@ -253,14 +278,24 @@ export default function PatientRecords() {
           </div>
 
           {/* Patient Details & Records */}
-          <div className="lg:col-span-2">
+          <div className={`${showSidebar ? 'lg:col-span-2' : 'lg:col-span-3'} transition-all duration-300`}>
             {!selectedPatient ? (
-              <div className="text-center py-16 bg-card rounded-xl border border-border">
-                <User className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Select a patient to view their details and records.</p>
+              <div className="text-center py-16 bg-card rounded-xl border border-dashed border-border/60">
+                <Users className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                <h2 className="text-xl font-medium text-foreground/70">No Patient Selected</h2>
+                <p className="text-muted-foreground max-w-sm mx-auto mt-2">Select a patient from the list on the left to view their complete medical history and manage records.</p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {!showSidebar && (
+                      <Button variant="outline" size="sm" onClick={() => setShowSidebar(true)} className="gap-2">
+                        <ChevronLeft className="w-4 h-4" /> Back to List
+                      </Button>
+                    )}
+                  </div>
+                </div>
                 {/* Patient Info Card */}
                 <Card>
                   <CardHeader>

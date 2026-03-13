@@ -86,8 +86,42 @@ export default function Consultations() {
       return;
     }
     setDispensed(prev => [...prev, { medication_id: med.id, name: `${med.name} (${med.unit})`, quantity: qty, available: med.quantity - alreadyAdded - qty }]);
+    
+    // Also add to the prescription text area automatically
+    const newPrescriptionEntry = `${med.name} — ${qty} ${med.unit}`;
+    setForm(prev => ({
+      ...prev,
+      prescription: prev.prescription 
+        ? `${prev.prescription.trim()}\n${newPrescriptionEntry}`
+        : newPrescriptionEntry
+    }));
+
     setSelectedMedId('');
     setDispenseQty('1');
+  }
+
+  function attemptAutoDispense(medName: string, quantity: number = 10) { // Default qty for common packs
+    if (!medName) return;
+    
+    const lowerInput = medName.toLowerCase();
+    // Try to find a match in the inventory
+    const match = inventory.find(m => {
+      const lowerMed = m.name.toLowerCase();
+      return lowerInput.includes(lowerMed) || lowerMed.includes(lowerInput.split(' ')[0]);
+    });
+
+    if (match && match.quantity > 0) {
+      const alreadyDispensed = dispensed.some(d => d.medication_id === match.id);
+      if (!alreadyDispensed) {
+        setDispensed(prev => [...prev, { 
+          medication_id: match.id, 
+          name: `${match.name} (${match.unit})`, 
+          quantity: Math.min(quantity, match.quantity), 
+          available: Math.max(0, match.quantity - quantity) 
+        }]);
+        toast.info(`Auto-tracked ${match.name} in inventory.`);
+      }
+    }
   }
 
   function removeDispenseEntry(index: number) {
@@ -128,6 +162,15 @@ export default function Consultations() {
       const newStatus = form.is_referred ? 'referred' : 'completed';
       await supabase.from('visits').update({ status: newStatus, check_out_time: new Date().toISOString() }).eq('id', selectedVisit.id);
 
+      // Notify student
+      await supabase.from('notifications').insert({
+        user_id: selectedVisit.patient_id,
+        title: 'Consultation Completed',
+        message: `Your visit for "${selectedVisit.chief_complaint}" has been completed. Check your visit history for clinical feedback and prescriptions.`,
+        type: 'info',
+        link: '/my-visits'
+      });
+
       if (dispensed.length > 0) {
         toast.success(`Record saved. ${dispensed.length} medication(s) dispensed and stock updated.`);
       } else {
@@ -146,13 +189,60 @@ export default function Consultations() {
     }
   }
 
+  async function seedInventory() {
+    setLoading(true);
+    try {
+      const medications = [
+        { name: 'Paracetamol 500mg', description: 'Analgesic and antipyretic for pain and fever.', quantity: 1000, unit: 'tablets', reorder_level: 200 },
+        { name: 'Ibuprofen 400mg', description: 'Non-steroidal anti-inflammatory drug (NSAID).', quantity: 500, unit: 'tablets', reorder_level: 100 },
+        { name: 'Diclofenac 50mg', description: 'For relief of more severe pain and inflammation.', quantity: 300, unit: 'tablets', reorder_level: 50 },
+        { name: 'Amoxicillin 500mg', description: 'Broad-spectrum penicillin antibiotic.', quantity: 500, unit: 'capsules', reorder_level: 100 },
+        { name: 'Amoxiclav 625mg', description: 'Combination antibiotic for resistant bacteria.', quantity: 200, unit: 'tablets', reorder_level: 50 },
+        { name: 'Azithromycin 500mg', description: 'Macrolide antibiotic for respiratory and skin infections.', quantity: 100, unit: 'tablets', reorder_level: 20 },
+        { name: 'Ciprofloxacin 500mg', description: 'Fluoroquinolone antibiotic for UTIs and GI infections.', quantity: 300, unit: 'tablets', reorder_level: 50 },
+        { name: 'Ceftriaxone 1g', description: 'Injectable third-generation cephalosporin antibiotic.', quantity: 50, unit: 'vials', reorder_level: 10 },
+        { name: 'Artemether/Lumefantrine (Coartem)', description: 'First-line ACT for uncomplicated malaria.', quantity: 150, unit: 'packs', reorder_level: 30 },
+        { name: 'Quinine Sulphate 300mg', description: 'Used for severe malaria or as a second-line treatment.', quantity: 200, unit: 'tablets', reorder_level: 40 },
+        { name: 'Cetirizine 10mg', description: 'Non-sedating antihistamine for allergies.', quantity: 400, unit: 'tablets', reorder_level: 50 },
+        { name: 'Loratadine 10mg', description: 'Long-acting antihistamine.', quantity: 300, unit: 'tablets', reorder_level: 50 },
+        { name: 'Chlorpheniramine 4mg', description: 'Antihistamine with sedative effects (Piriton).', quantity: 500, unit: 'tablets', reorder_level: 100 },
+        { name: 'Oral Rehydration Salts (ORS)', description: 'For rehydration in case of diarrhea or vomiting.', quantity: 200, unit: 'sachets', reorder_level: 50 },
+        { name: 'Zinc Sulfate 20mg', description: 'Supplement for pediatric diarrhea management.', quantity: 100, unit: 'tablets', reorder_level: 20 },
+        { name: 'Metronidazole 400mg', description: 'Antibiotic for anaerobic and protozoal infections.', quantity: 300, unit: 'tablets', reorder_level: 50 },
+        { name: 'Omeprazole 20mg', description: 'Proton pump inhibitor for gastritis and ulcers.', quantity: 400, unit: 'capsules', reorder_level: 50 },
+        { name: 'Salbutamol Inhaler (Ventolin)', description: 'Rescue inhaler for acute asthma symptoms.', quantity: 30, unit: 'inhalers', reorder_level: 10 },
+        { name: 'Multivitamins', description: 'General dietary supplement.', quantity: 1000, unit: 'tablets', reorder_level: 200 },
+        { name: 'Albendazole 400mg', description: 'Deworming medication.', quantity: 200, unit: 'tablets', reorder_level: 50 }
+      ];
+
+      const { error } = await supabase.from('medication_inventory').upsert(medications, { onConflict: 'name' });
+      if (error) throw error;
+      
+      toast.success('Inventory seeded successfully!');
+      loadInventory();
+    } catch (err: any) {
+      toast.error(`Seeding failed: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const medicalHistorySummary = pastRecords.map(r => `${r.diagnosis || 'No diagnosis'} (${r.treatment || 'No treatment'})`).join('; ');
 
   return (
     <DashboardLayout>
       <div className="animate-fade-in">
-        <h1 className="font-serif text-3xl font-bold mb-2">Active Consultations</h1>
-        <p className="text-muted-foreground mb-8">Record diagnoses and prescriptions for patients currently in consultation</p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="font-serif text-3xl font-bold mb-2">Active Consultations</h1>
+            <p className="text-muted-foreground">Record diagnoses and prescriptions for patients currently in consultation</p>
+          </div>
+          {inventory.length === 0 && (
+            <Button onClick={seedInventory} disabled={loading} variant="outline" className="gap-2">
+              <Plus className="w-4 h-4" /> Seed Medication Inventory
+            </Button>
+          )}
+        </div>
 
         {visits.length === 0 ? (
           <div className="text-center py-16 bg-card rounded-xl border border-border">
@@ -315,9 +405,25 @@ export default function Consultations() {
                               conditions={patientConditions}
                               currentMedications={dispensed.map(d => d.name)}
                               medicalHistory={medicalHistorySummary}
-                              onSuggestDiagnosis={(d) => setForm(prev => ({ ...prev, diagnosis: d }))}
-                              onSuggestTreatment={(t) => setForm(prev => ({ ...prev, treatment: prev.treatment ? `${prev.treatment}\n${t}` : t }))}
-                              onSuggestPrescription={(p) => setForm(prev => ({ ...prev, prescription: prev.prescription ? `${prev.prescription}\n${p}` : p }))}
+                               onSuggestDiagnosis={(d) => setForm(prev => ({ ...prev, diagnosis: d }))}
+                               onSuggestTreatment={(t) => setForm(prev => ({ ...prev, treatment: prev.treatment ? `${prev.treatment}\n${t}` : t }))}
+                               onSuggestPrescription={(p) => {
+                                 setForm(prev => ({ ...prev, prescription: prev.prescription ? `${prev.prescription}\n${p}` : p }));
+                                 attemptAutoDispense(p);
+                               }}
+                               onAutoFill={(data) => {
+                                 setForm(prev => ({ 
+                                   ...prev, 
+                                   diagnosis: data.diagnosis || prev.diagnosis,
+                                   treatment: data.treatment ? (prev.treatment ? `${prev.treatment.trim()}\n${data.treatment}` : data.treatment) : prev.treatment,
+                                   prescription: data.prescription ? (prev.prescription ? `${prev.prescription.trim()}\n${data.prescription}` : data.prescription) : prev.prescription,
+                                 }));
+                                 
+                                 // Auto dispense for each suggested medication
+                                 if (data.prescription) {
+                                   data.prescription.split('\n').forEach(line => attemptAutoDispense(line));
+                                 }
+                               }}
                             />
                           </div>
                         </div>
