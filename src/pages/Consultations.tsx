@@ -424,6 +424,7 @@ export default function Consultations() {
                                    data.prescription.split('\n').forEach(line => attemptAutoDispense(line));
                                  }
                                }}
+                               onUpdateSymptoms={(s) => setForm(prev => ({ ...prev, symptoms: s }))}
                             />
                           </div>
                         </div>

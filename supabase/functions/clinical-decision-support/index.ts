@@ -74,6 +74,42 @@ ${patient_allergies?.length ? `\nPatient allergies: ${patient_allergies.join(", 
 ${patient_conditions?.length ? `\nChronic conditions: ${patient_conditions.join(", ")}` : "No known conditions"}
 ${current_medications?.length ? `\nCurrently taking: ${current_medications.join(", ")}` : "No current medications"}`;
 
+    } else if (action === "voice_analyze") {
+      systemPrompt = `You are an expert Medical AI Assistant for Bishop Barham University College Sick Bay.
+You will be provided with a transcript of a doctor speaking about a patient.
+Your task is to:
+1. Extract and refine the symptoms mentioned.
+2. Provide a list of top 3-5 possible diagnoses with reasoning.
+3. Recommend specific treatments and medications for each.
+4. Check for alerts based on patient history.
+
+Always respond in valid JSON:
+{
+  "refined_symptoms": "...",
+  "analysis": {
+    "suggested_diagnoses": [{"name": "...", "confidence": "high|medium|low", "reasoning": "...", "medications": [{"name": "...", "description": "...", "dosage": "..."}]}],
+    "recommended_tests": ["..."],
+    "red_flags": ["..."],
+    "triage_level": "emergency|urgent|routine"
+  },
+  "treatment": {
+    "treatment_plan": [{"treatment": "...", "details": "...", "duration": "..."}],
+    "medications": [{"name": "...", "description": "...", "dosage": "...", "frequency": "...", "duration": "...", "notes": "..."}],
+    "lifestyle_advice": ["..."],
+    "when_to_refer": "..."
+  }
+}
+Keep recommendations appropriate for a university clinic setting.`;
+
+      userPrompt = `Doctor's Transcript: "${symptoms}" (Note: the input transcript might have speech-to-text errors)
+Patient History:
+${patient_allergies?.length ? `\n- Allergies: ${patient_allergies.join(", ")}` : ""}
+${patient_conditions?.length ? `\n- Chronic Conditions: ${patient_conditions.join(", ")}` : ""}
+${medical_history ? `\n- Medical History Summary: ${medical_history}` : ""}
+${current_medications?.length ? `\n- Current Medications: ${current_medications.join(", ")}` : ""}
+
+Process the transcript and provide a comprehensive clinical analysis.`;
+
     } else {
       return new Response(JSON.stringify({ error: "Invalid action" }), {
         status: 400,

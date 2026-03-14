@@ -47,7 +47,7 @@ export default function Dashboard() {
       });
     } else {
       const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-      const startDate = startOfMonth(subMonths(new Date(), 11)).toISOString();
+      const startDate = new Date(new Date().getFullYear(), 0, 1).toISOString();
 
       const [
         allVisitsRes, thisWeekVisits, lastWeekVisits,
@@ -255,7 +255,7 @@ export default function Dashboard() {
             </div>
             {monthlyData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={monthlyData}>
+                <AreaChart data={monthlyData} margin={{ left: -20, right: 10, top: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gradTotal" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(174, 62%, 38%)" stopOpacity={0.15} />
@@ -267,7 +267,13 @@ export default function Dashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(200, 20%, 90%)" vertical={false} />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'hsl(210, 10%, 50%)' }} />
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 11, fill: 'hsl(210, 10%, 50%)' }}
+                    padding={{ left: 0, right: 0 }}
+                  />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'hsl(210, 10%, 50%)' }} />
                   <Tooltip
                     contentStyle={{

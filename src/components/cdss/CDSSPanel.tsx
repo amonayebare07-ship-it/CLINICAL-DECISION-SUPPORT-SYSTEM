@@ -19,25 +19,28 @@ interface CDSSPanelProps {
   onSuggestTreatment?: (treatment: string) => void;
   onSuggestPrescription?: (prescription: string) => void;
   onAutoFill?: (data: { diagnosis?: string; treatment?: string; prescription?: string }) => void;
+  onUpdateSymptoms?: (symptoms: string) => void;
 }
 
 export default function CDSSPanel({
   symptoms, diagnosis, prescription, patientId,
   allergies, conditions, currentMedications, medicalHistory,
-  onSuggestDiagnosis, onSuggestTreatment, onSuggestPrescription, onAutoFill,
+  onSuggestDiagnosis, onSuggestTreatment, onSuggestPrescription, onAutoFill, onUpdateSymptoms,
 }: CDSSPanelProps) {
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [treatmentResult, setTreatmentResult] = useState<any>(null);
   const [drugCheckResult, setDrugCheckResult] = useState<any>(null);
   const [loading, setLoading] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
 
-  async function callCDSS(action: string) {
+  async function callCDSS(action: string, voiceTranscript?: string) {
     setLoading(action);
     try {
       const { data, error } = await supabase.functions.invoke('clinical-decision-support', {
         body: {
           action,
-          symptoms,
+          symptoms: action === 'voice_analyze' ? voiceTranscript : symptoms,
           diagnosis,
           prescription,
           patient_allergies: allergies,
@@ -54,11 +57,61 @@ export default function CDSSPanel({
       if (action === 'analyze_symptoms') setAnalysisResult(data.result);
       else if (action === 'recommend_treatment') setTreatmentResult(data.result);
       else if (action === 'check_drug_interactions') setDrugCheckResult(data.result);
+      else if (action === 'voice_analyze') {
+        if (data.result.refined_symptoms && onUpdateSymptoms) {
+          onUpdateSymptoms(data.result.refined_symptoms);
+        }
+        setAnalysisResult(data.result.analysis);
+        setTreatmentResult(data.result.treatment);
+      }
     } catch (err: any) {
       toast.error(err.message || 'CDSS analysis failed');
     } finally {
       setLoading(null);
     }
+  }
+
+  function toggleRecording() {
+    if (isRecording) {
+      recognition?.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error('Speech recognition is not supported in this browser.');
+      return;
+    }
+
+    const newRecognition = new SpeechRecognition();
+    newRecognition.continuous = false;
+    newRecognition.interimResults = false;
+    newRecognition.lang = 'en-US';
+
+    newRecognition.onstart = () => {
+      setIsRecording(true);
+      toast.info('Recording... Speak symptoms, diagnosis, and prescription details.');
+    };
+
+    newRecognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setIsRecording(false);
+      if (onUpdateSymptoms) onUpdateSymptoms(transcript);
+      callCDSS('voice_analyze', transcript);
+    };
+
+    newRecognition.onerror = (event: any) => {
+      setIsRecording(false);
+      toast.error('Speech recognition error: ' + event.error);
+    };
+
+    newRecognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    setRecognition(newRecognition);
+    newRecognition.start();
   }
 
   const severityColor = (s: string) =>
@@ -106,6 +159,23 @@ export default function CDSSPanel({
           }}>
           {loading === 'check_drug_interactions' ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <ShieldAlert className="w-3 h-3 mr-1" />}
           Check Interactions
+        </Button>
+        <Button 
+          type="button" 
+          size="sm" 
+          variant={isRecording ? "destructive" : "secondary"}
+          disabled={!!loading}
+          onClick={toggleRecording}
+          className={isRecording ? "animate-pulse" : ""}
+        >
+          {loading === 'voice_analyze' ? (
+            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+          ) : isRecording ? (
+            <Activity className="w-3 h-3 mr-1" />
+          ) : (
+            <Brain className="w-3 h-3 mr-1" />
+          )}
+          {isRecording ? "Stop Recording" : "Record Voice"}
         </Button>
       </div>
 

@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { Mic, Square, Activity } from 'lucide-react';
 
 const COMMON_SYMPTOMS = [
   'Fever', 'Headache', 'Cough', 'Sore Throat', 'Body Aches', 
@@ -29,6 +30,50 @@ export default function ReportIllness() {
   const [location, setLocation] = useState('');
   const [areaOfResidence, setAreaOfResidence] = useState('');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
+
+  function toggleRecording() {
+    if (isRecording) {
+      recognition?.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error('Speech recognition is not supported in this browser.');
+      return;
+    }
+
+    const newRecognition = new SpeechRecognition();
+    newRecognition.continuous = false;
+    newRecognition.interimResults = false;
+    newRecognition.lang = 'en-US';
+
+    newRecognition.onstart = () => {
+      setIsRecording(true);
+      toast.info('Recording... Describe your symptoms.');
+    };
+
+    newRecognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setIsRecording(false);
+      setComplaint(prev => prev ? `${prev}\n${transcript}` : transcript);
+    };
+
+    newRecognition.onerror = (event: any) => {
+      setIsRecording(false);
+      toast.error('Speech recognition error: ' + event.error);
+    };
+
+    newRecognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    setRecognition(newRecognition);
+    newRecognition.start();
+  }
 
   const toggleSymptom = (symptom: string) => {
     setSelectedSymptoms(prev => {
@@ -94,7 +139,19 @@ export default function ReportIllness() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="complaint">Chief Complaint / Detailed Symptoms *</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="complaint">Chief Complaint / Detailed Symptoms *</Label>
+                  <Button 
+                    type="button" 
+                    size="sm" 
+                    variant={isRecording ? "destructive" : "outline"}
+                    onClick={toggleRecording}
+                    className={`h-8 gap-2 ${isRecording ? "animate-pulse" : ""}`}
+                  >
+                    {isRecording ? <Activity className="w-3 h-3" /> : <Mic className="w-3 h-3 text-primary" />}
+                    {isRecording ? "Stop Recording" : "Speak Symptoms"}
+                  </Button>
+                </div>
                 <Textarea
                   id="complaint"
                   value={complaint}
