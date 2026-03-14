@@ -147,7 +147,7 @@ export default function Dashboard() {
             <StatBox icon={CheckCircle} label="Completed" value={stats.completed} color="success" />
             <StatBox icon={Calendar} label="Appointments" value={stats.appointments} color="accent" />
           </div>
-          <div className="bg-card rounded-xl border border-border p-6">
+          <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
             <h2 className="font-serif text-xl font-bold mb-4">Recent Visits</h2>
             {recentVisits.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No visits recorded yet.</p>
