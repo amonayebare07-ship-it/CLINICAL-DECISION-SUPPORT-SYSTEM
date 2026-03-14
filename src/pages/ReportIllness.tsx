@@ -14,12 +14,26 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Mic, Square, Activity } from 'lucide-react';
 
-const COMMON_SYMPTOMS = [
-  'Fever', 'Headache', 'Cough', 'Sore Throat', 'Body Aches', 
-  'Fatigue', 'Nausea', 'Vomiting', 'Diarrhea', 'Stomach Pain', 
-  'Dizziness', 'Rash', 'Shortness of Breath', 'Chest Pain',
-  'Joint Pain', 'Loss of Taste/Smell'
-];
+const SYMPTOMS_CATEGORIES = {
+  "Common / General": [
+    "Fever", "Headache", "Fatigue", "Body Aches", "Chills", "Weight Loss", "Night Sweats", "Dizziness", "Weakness"
+  ],
+  "Respiratory": [
+    "Cough", "Sore Throat", "Shortness of Breath", "Chest Pain", "Runny Nose", "Nasal Congestion", "Sneezing", "Wheezing"
+  ],
+  "Digestive": [
+    "Nausea", "Vomiting", "Diarrhea", "Stomach Pain", "Loss of Appetite", "Bloating", "Constipation", "Heartburn"
+  ],
+  "Neurological & Mental": [
+    "Confusion", "Loss of Balance", "Seizures", "Anxiety", "Depression", "Insomnia", "Loss of Taste/Smell"
+  ],
+  "Musculoskeletal & Skin": [
+    "Joint Pain", "Muscle Stiffness", "Back Pain", "Rash", "Itching", "Skin Redness", "Swelling"
+  ],
+  "Other": [
+    "Eye Redness", "Ear Pain", "Frequent Urination", "Burning Urination"
+  ]
+};
 
 export default function ReportIllness() {
   const { user } = useAuth();
@@ -111,7 +125,7 @@ export default function ReportIllness() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto animate-fade-in">
+      <div className="max-w-2xl mx-auto animate-fade-in pb-12">
         <h1 className="font-serif text-3xl font-bold mb-2">Report Illness</h1>
         <p className="text-muted-foreground mb-8">Describe your symptoms and we'll get you help as soon as possible.</p>
 
@@ -122,18 +136,25 @@ export default function ReportIllness() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-4">
-                <Label>Select Symptoms</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {COMMON_SYMPTOMS.map(s => (
-                    <Badge
-                      key={s}
-                      variant={selectedSymptoms.includes(s) ? 'default' : 'outline'}
-                      className="cursor-pointer py-2 justify-center hover:bg-primary/10 transition-colors"
-                      onClick={() => toggleSymptom(s)}
-                    >
-                      {s}
-                    </Badge>
+              <div className="space-y-6">
+                <Label className="text-base">Select Symptoms</Label>
+                <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                  {Object.entries(SYMPTOMS_CATEGORIES).map(([category, symptoms]) => (
+                    <div key={category} className="space-y-2">
+                      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{category}</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {symptoms.map(s => (
+                          <Badge
+                            key={s}
+                            variant={selectedSymptoms.includes(s) ? 'default' : 'outline'}
+                            className="cursor-pointer py-2 px-3 justify-center hover:bg-primary/10 transition-colors text-xs font-normal"
+                            onClick={() => toggleSymptom(s)}
+                          >
+                            {s}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
