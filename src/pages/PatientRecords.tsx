@@ -460,8 +460,8 @@ export default function PatientRecords() {
                   {visits.length === 0 ? (
                     <p className="text-muted-foreground text-sm">No visits yet.</p>
                   ) : (
-                    <div className="bg-card rounded-xl border border-border overflow-hidden">
-                      <table className="w-full text-sm">
+                    <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm overflow-x-auto -mx-4 sm:mx-0">
+                      <table className="w-full text-sm min-w-[600px]">
                         <thead>
                           <tr className="border-b border-border bg-muted/30">
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
@@ -473,13 +473,13 @@ export default function PatientRecords() {
                         <tbody>
                           {visits.map(visit => (
                             <tr key={visit.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                              <td className="py-3 px-4">{format(new Date(visit.created_at), 'MMM dd, yyyy')}</td>
+                              <td className="py-3 px-4 whitespace-nowrap">{format(new Date(visit.created_at), 'MMM dd, yyyy')}</td>
                               <td className="py-3 px-4">{visit.chief_complaint}</td>
                               <td className="py-3 px-4">
-                                <Badge variant="outline">{visit.status.replace('_', ' ')}</Badge>
+                                <Badge variant="outline" className="whitespace-nowrap">{visit.status.replace('_', ' ')}</Badge>
                               </td>
                               <td className="py-3 px-4">
-                                <Button variant="ghost" size="sm" onClick={() => { setSelectedVisit(visit); setNoteOpen(true); }}>
+                                <Button variant="ghost" size="sm" className="whitespace-nowrap" onClick={() => { setSelectedVisit(visit); setNoteOpen(true); }}>
                                   <StickyNote className="w-4 h-4 mr-1" /> Add Notes
                                 </Button>
                               </td>

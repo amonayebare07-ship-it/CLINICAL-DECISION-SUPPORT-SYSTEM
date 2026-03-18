@@ -121,13 +121,13 @@ export default function Inventory() {
         </Dialog>
 
         {items.length === 0 ? (
-          <div className="text-center py-16 bg-card rounded-xl border border-border">
+          <div className="text-center py-16 bg-card rounded-xl border border-border shadow-sm">
             <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No items in inventory.</p>
+            <p className="text-muted-foreground font-medium">No items in inventory.</p>
           </div>
         ) : (
-          <div className="bg-card rounded-xl border border-border overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
                   <th className="text-left py-3 px-4 font-medium text-muted-foreground">Name</th>

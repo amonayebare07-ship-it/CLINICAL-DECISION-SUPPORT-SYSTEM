@@ -152,8 +152,8 @@ export default function Dashboard() {
             {recentVisits.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No visits recorded yet.</p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0 scrollbar-thin">
+                <table className="w-full text-sm min-w-[500px]">
                   <thead><tr className="border-b border-border">
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Complaint</th>
@@ -162,7 +162,7 @@ export default function Dashboard() {
                   </tr></thead>
                   <tbody>{recentVisits.map(visit => (
                     <tr key={visit.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-4">{format(new Date(visit.created_at), 'MMM dd, yyyy')}</td>
+                      <td className="py-3 px-4 whitespace-nowrap">{format(new Date(visit.created_at), 'MMM dd, yyyy')}</td>
                       <td className="py-3 px-4 max-w-[200px] truncate">{visit.chief_complaint}</td>
                       <td className="py-3 px-4">{priorityBadge(visit.priority || 'normal')}</td>
                       <td className="py-3 px-4">{statusBadge(visit.status)}</td>
