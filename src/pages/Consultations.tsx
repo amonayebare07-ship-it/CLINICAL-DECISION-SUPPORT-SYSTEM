@@ -26,9 +26,7 @@ interface DispenseEntry {
 }
 
 export default function Consultations() {
-  const { user } = userAuthFix(); // Using local hook wrapper or just useAuth()
   const { user: authUser } = useAuth();
-  const [userState] = useState(authUser);
 
   const [visits, setVisits] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<Record<string, any>>({});
@@ -209,9 +207,6 @@ export default function Consultations() {
     }
   }
 
-  function userAuthFix() {
-    return { user: authUser };
-  }
 
   const medicalHistorySummary = pastRecords.map(r => `${r.diagnosis || 'No diagnosis'} (${r.treatment || 'No treatment'})`).join('; ');
 
