@@ -21,14 +21,17 @@ serve(async (req) => {
       systemPrompt = `You are a Clinical Decision Support System (CDSS) for a university sick bay at Bishop Barham University College. 
 You help medical staff analyze patient symptoms and suggest possible diagnoses. 
 You are NOT a replacement for clinical judgment — you provide decision support only.
+Always respond in valid JSON:
 {
   "suggested_diagnoses": [{"name": "...", "confidence": "high|medium|low", "reasoning": "...", "medications": [{"name": "...", "description": "...", "dosage": "..."}]}],
   "recommended_tests": ["..."],
   "red_flags": ["..."],
   "triage_level": "emergency|urgent|routine",
-  "symptomatic_relief": [{"symptom": "...", "medication": "...", "dosage": "...", "reasoning": "..."}]
+  "symptomatic_relief": [{"symptom": "...", "medication": "...", "dosage": "...", "reasoning": "..."}],
+  "follow_up_date": "YYYY-MM-DD",
+  "additional_notes": "..."
 }
-Limit to top 3-5 most likely diagnoses. For EACH diagnosis, you MUST provide at least one recommended medication in the "medications" array. If no specific prescription is needed, suggest over-the-counter relief (e.g., Paracetamol, Oral Rehydration Salts). Also provide specific symptomatic relief for each individual symptom reported. Consider the patient's medical history and conditions. Use only valid JSON.`;
+Limit to top 3-5 most likely diagnoses. For EACH diagnosis, you MUST provide at least one recommended medication in the "medications" array. If no specific prescription is needed, suggest over-the-counter relief (e.g., Paracetamol, Oral Rehydration Salts). Also provide specific symptomatic relief for each individual symptom reported. Consider the patient's medical history and conditions. Provide a suggested follow-up date (e.g., 7 days from today) in YYYY-MM-DD format (use 2026-03-25 as today's date context). Provide clinical pearls or additional notes in "additional_notes". Use only valid JSON.`;
 
       userPrompt = `Patient presents with the following symptoms: ${symptoms}
 ${patient_conditions?.length ? `\nKnown chronic conditions: ${patient_conditions.join(", ")}` : ""}
@@ -46,9 +49,11 @@ Always respond in valid JSON:
   "medications": [{"name": "...", "description": "...", "dosage": "...", "frequency": "...", "duration": "...", "notes": "..."}],
   "lifestyle_advice": ["..."],
   "follow_up": "...",
-  "when_to_refer": "..."
+  "follow_up_date": "YYYY-MM-DD",
+  "when_to_refer": "...",
+  "additional_notes": "..."
 }
-Consider patient allergies and conditions when recommending medications.`;
+Consider patient allergies and conditions when recommending medications. Provide a suggested follow-up date (e.g., 7 days from today) in YYYY-MM-DD format (use 2026-03-25 as today's date context). Provide clinical pearls or additional notes in "additional_notes".`;
 
       userPrompt = `Diagnosis: ${diagnosis || "Not specified (base on symptoms)"}
 Symptoms: ${symptoms || "Not specified"}
@@ -82,6 +87,7 @@ Your task is to:
 2. Provide a list of top 3-5 possible diagnoses with reasoning.
 3. Recommend specific treatments and medications for each.
 4. Check for alerts based on patient history.
+5. Provide a follow-up date and additional notes.
 
 Always respond in valid JSON:
 {
@@ -90,16 +96,20 @@ Always respond in valid JSON:
     "suggested_diagnoses": [{"name": "...", "confidence": "high|medium|low", "reasoning": "...", "medications": [{"name": "...", "description": "...", "dosage": "..."}]}],
     "recommended_tests": ["..."],
     "red_flags": ["..."],
-    "triage_level": "emergency|urgent|routine"
+    "triage_level": "emergency|urgent|routine",
+    "follow_up_date": "YYYY-MM-DD",
+    "additional_notes": "..."
   },
   "treatment": {
     "treatment_plan": [{"treatment": "...", "details": "...", "duration": "..."}],
     "medications": [{"name": "...", "description": "...", "dosage": "...", "frequency": "...", "duration": "...", "notes": "..."}],
     "lifestyle_advice": ["..."],
-    "when_to_refer": "..."
+    "when_to_refer": "...",
+    "follow_up_date": "YYYY-MM-DD",
+    "additional_notes": "..."
   }
 }
-Keep recommendations appropriate for a university clinic setting.`;
+Keep recommendations appropriate for a university clinic setting. Use 2026-03-25 as today's date context for the follow-up date.`;
 
       userPrompt = `Doctor's Transcript: "${symptoms}" (Note: the input transcript might have speech-to-text errors)
 Patient History:

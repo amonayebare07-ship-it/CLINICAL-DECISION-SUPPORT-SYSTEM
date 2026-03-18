@@ -18,7 +18,13 @@ interface CDSSPanelProps {
   onSuggestDiagnosis?: (diagnosis: string) => void;
   onSuggestTreatment?: (treatment: string) => void;
   onSuggestPrescription?: (prescription: string) => void;
-  onAutoFill?: (data: { diagnosis?: string; treatment?: string; prescription?: string }) => void;
+  onAutoFill?: (data: { 
+    diagnosis?: string; 
+    treatment?: string; 
+    prescription?: string;
+    follow_up_date?: string;
+    notes?: string;
+  }) => void;
   onUpdateSymptoms?: (symptoms: string) => void;
 }
 
@@ -225,6 +231,10 @@ export default function CDSSPanel({
               const symptomsMeds = analysisResult.symptomatic_relief.map((s: any) => `${s.medication} ${s.dosage || ''}`).join('\n');
               data.prescription = data.prescription ? `${data.prescription}\n${symptomsMeds}` : symptomsMeds;
             }
+
+            // Autofill follow-up and notes
+            data.follow_up_date = treatmentResult?.follow_up_date || analysisResult?.follow_up_date;
+            data.notes = treatmentResult?.additional_notes || analysisResult?.additional_notes;
 
             onAutoFill(data);
             toast.success('Record auto-filled with AI recommendations');
