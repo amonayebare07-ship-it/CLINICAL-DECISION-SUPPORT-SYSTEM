@@ -417,6 +417,8 @@ export default function Consultations() {
                                    diagnosis: data.diagnosis || prev.diagnosis,
                                    treatment: data.treatment ? (prev.treatment ? `${prev.treatment.trim()}\n${data.treatment}` : data.treatment) : prev.treatment,
                                    prescription: data.prescription ? (prev.prescription ? `${prev.prescription.trim()}\n${data.prescription}` : data.prescription) : prev.prescription,
+                                   follow_up_date: data.follow_up_date || prev.follow_up_date,
+                                   notes: data.notes ? (prev.notes ? `${prev.notes.trim()}\n${data.notes}` : data.notes) : prev.notes,
                                  }));
                                  
                                  // Auto dispense for each suggested medication
