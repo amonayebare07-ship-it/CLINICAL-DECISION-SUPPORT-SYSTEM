@@ -271,10 +271,10 @@ export default function Consultations() {
                         </DialogHeader>
 
                         {/* Mobile: Tabs | Desktop: Side-by-side */}
-                        <div className="flex-1 overflow-hidden p-0">
-                          <div className="lg:hidden h-full flex flex-col pt-2">
-                            <Tabs defaultValue="record" className="flex-1 flex flex-col overflow-hidden">
-                              <TabsList className="grid w-full grid-cols-2 px-4 mb-2 bg-transparent">
+                        <div className="flex-1 overflow-hidden p-0 flex flex-col min-h-0">
+                          <div className="lg:hidden flex-1 flex flex-col pt-2 min-h-0">
+                            <Tabs defaultValue="record" className="flex-1 flex flex-col overflow-hidden min-h-0">
+                              <TabsList className="grid w-full grid-cols-2 px-4 mb-2 bg-transparent shrink-0">
                                 <TabsTrigger value="record" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center justify-center gap-2 py-2">
                                   <FileText className="w-4 h-4" /> Record
                                 </TabsTrigger>
@@ -282,24 +282,24 @@ export default function Consultations() {
                                   <Brain className="w-4 h-4" /> AI Support
                                 </TabsTrigger>
                               </TabsList>
-                              <TabsContent value="record" className="flex-1 overflow-y-auto px-4 pb-4">
+                              <TabsContent value="record" className="flex-1 overflow-y-auto px-4 pb-4 min-h-0 data-[state=active]:flex data-[state=active]:flex-col">
                                 <form onSubmit={saveRecord} className="space-y-4">
                                   <ConsultationFormFields form={form} setForm={setForm} inventory={inventory} dispensed={dispensed} selectedMedId={selectedMedId} setSelectedMedId={setSelectedMedId} dispenseQty={dispenseQty} setDispenseQty={setDispenseQty} addDispenseEntry={addDispenseEntry} removeDispenseEntry={removeDispenseEntry} loading={loading} visitId={visit.patient_id} />
                                 </form>
                               </TabsContent>
-                              <TabsContent value="ai" className="flex-1 overflow-y-auto px-4 pb-4">
+                              <TabsContent value="ai" className="flex-1 overflow-y-auto px-4 pb-4 min-h-0">
                                 <CDSSPanelWrapper form={form} setForm={setForm} visit={visit} patientAllergies={patientAllergies} patientConditions={patientConditions} dispensed={dispensed} medicalHistorySummary={medicalHistorySummary} attemptAutoDispense={attemptAutoDispense} />
                               </TabsContent>
                             </Tabs>
                           </div>
 
-                          <div className="hidden lg:flex gap-0 h-full overflow-hidden">
+                          <div className="hidden lg:flex flex-1 gap-0 overflow-hidden min-h-0">
                             {/* Left: Form */}
-                            <form onSubmit={saveRecord} className="flex-1 overflow-y-auto px-8 py-6 space-y-6 border-r">
+                            <form onSubmit={saveRecord} className="flex-1 overflow-y-auto px-8 py-6 space-y-6 border-r min-h-0">
                                <ConsultationFormFields form={form} setForm={setForm} inventory={inventory} dispensed={dispensed} selectedMedId={selectedMedId} setSelectedMedId={setSelectedMedId} dispenseQty={dispenseQty} setDispenseQty={setDispenseQty} addDispenseEntry={addDispenseEntry} removeDispenseEntry={removeDispenseEntry} loading={loading} visitId={visit.patient_id} />
                             </form>
                             {/* Right: AI Panel */}
-                            <div className="w-80 overflow-y-auto shrink-0 bg-muted/10 px-6 py-6 scrollbar-hide">
+                            <div className="w-80 overflow-y-auto shrink-0 bg-muted/10 px-6 py-6 scrollbar-hide min-h-0">
                               <CDSSPanelWrapper form={form} setForm={setForm} visit={visit} patientAllergies={patientAllergies} patientConditions={patientConditions} dispensed={dispensed} medicalHistorySummary={medicalHistorySummary} attemptAutoDispense={attemptAutoDispense} />
                             </div>
                           </div>
