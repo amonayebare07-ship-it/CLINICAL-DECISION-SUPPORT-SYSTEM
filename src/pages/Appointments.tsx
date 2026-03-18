@@ -28,15 +28,26 @@ export default function Appointments() {
     let q = supabase.from('appointments').select('*').order('appointment_date', { ascending: true });
     if (role === 'student') q = q.eq('patient_id', user!.id);
     const { data } = await q;
-    setAppointments(data || []);
+    const fetchedAppointments = data || [];
 
     // Load patient profiles for staff/admin
     if (role !== 'student' && data && data.length > 0) {
       const ids = [...new Set(data.map(a => a.patient_id))];
-      const { data: profs } = await supabase.from('profiles').select('*').in('user_id', ids);
+      const [profsRes, rolesRes] = await Promise.all([
+        supabase.from('profiles').select('*').in('user_id', ids),
+        supabase.from('user_roles').select('*').in('user_id', ids)
+      ]);
+      const rolesMap: Record<string, string> = {};
+      rolesRes.data?.forEach(r => { rolesMap[r.user_id] = r.role; });
+
       const map: Record<string, any> = {};
-      profs?.forEach(p => { map[p.user_id] = p; });
+      profsRes.data?.forEach(p => { map[p.user_id] = p; });
       setProfiles(map);
+
+      const studentAppointments = fetchedAppointments.filter(a => (rolesMap[a.patient_id] || 'student') === 'student');
+      setAppointments(studentAppointments);
+    } else {
+      setAppointments(fetchedAppointments);
     }
   }
 

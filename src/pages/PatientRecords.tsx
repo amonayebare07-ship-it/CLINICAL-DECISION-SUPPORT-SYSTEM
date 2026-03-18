@@ -38,8 +38,20 @@ export default function PatientRecords() {
   useEffect(() => { loadPatients(); }, []);
 
   async function loadPatients() {
-    const { data } = await supabase.from('profiles').select('*').order('full_name');
-    setPatients(data || []);
+    const [profilesRes, rolesRes] = await Promise.all([
+      supabase.from('profiles').select('*').order('full_name'),
+      supabase.from('user_roles').select('*')
+    ]);
+    const profiles = profilesRes.data || [];
+    const rolesMap: Record<string, string> = {};
+    rolesRes.data?.forEach(r => { rolesMap[r.user_id] = r.role; });
+    
+    const patientsWithRoles = profiles.map(p => ({
+      ...p,
+      app_role: rolesMap[p.user_id] || 'student'
+    })).filter(p => p.app_role === 'student');
+    
+    setPatients(patientsWithRoles);
   }
 
   async function selectPatient(patient: any) {
@@ -263,9 +275,13 @@ export default function PatientRecords() {
                       : 'bg-card border-border hover:bg-muted/30'
                   }`}
                 >
-                  <p className="font-medium text-foreground">{patient.full_name || 'Unnamed'}</p>
+                  <p className="font-medium text-foreground flex items-center gap-2">
+                    <span>{patient.full_name || 'Unnamed'}</span>
+                    {patient.app_role === 'staff' && <Badge variant="secondary" className="text-[10px] py-0 h-4">Staff</Badge>}
+                    {patient.app_role === 'admin' && <Badge variant="destructive" className="text-[10px] py-0 h-4">Admin</Badge>}
+                  </p>
                   <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                    {patient.student_id && <span>{patient.student_id}</span>}
+                    {patient.student_id && patient.app_role === 'student' && <span>{patient.student_id}</span>}
                     {patient.gender && <span>• {patient.gender}</span>}
                     {patient.faculty && <span>• {patient.faculty}</span>}
                   </div>
@@ -301,15 +317,19 @@ export default function PatientRecords() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <User className="w-5 h-5" /> {selectedPatient.full_name}
+                      {selectedPatient.app_role === 'staff' && <Badge variant="secondary" className="text-xs">Staff</Badge>}
+                      {selectedPatient.app_role === 'admin' && <Badge variant="destructive" className="text-xs">Admin</Badge>}
                     </CardTitle>
                     {(role === 'staff' || role === 'admin') && (
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={startEditPatient}>
                           <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
                         </Button>
-                        <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setDeletePatientId(selectedPatient.id)}>
-                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
-                        </Button>
+                        {role === 'admin' && (
+                          <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setDeletePatientId(selectedPatient.id)}>
+                            <Trash2 className="w-3.5 h-3.5 mr-1" /> Remove
+                          </Button>
+                        )}
                       </div>
                     )}
                   </CardHeader>
@@ -392,9 +412,11 @@ export default function PatientRecords() {
                                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEditRecord(record)}>
                                       <Pencil className="w-3.5 h-3.5" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteRecordId(record.id)}>
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </Button>
+                                    {role === 'admin' && (
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteRecordId(record.id)}>
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </Button>
+                                    )}
                                   </>
                                 )}
                               </div>

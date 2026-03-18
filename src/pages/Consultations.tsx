@@ -54,13 +54,25 @@ export default function Consultations() {
 
   async function loadVisits() {
     const { data } = await supabase.from('visits').select('*').eq('status', 'in_consultation').order('created_at', { ascending: true });
-    setVisits(data || []);
     if (data && data.length > 0) {
       const ids = [...new Set(data.map(v => v.patient_id))];
-      const { data: profs } = await supabase.from('profiles').select('*').in('user_id', ids);
+      const [profsRes, rolesRes] = await Promise.all([
+        supabase.from('profiles').select('*').in('user_id', ids),
+        supabase.from('user_roles').select('*').in('user_id', ids)
+      ]);
+      const rolesMap: Record<string, string> = {};
+      rolesRes.data?.forEach(r => { rolesMap[r.user_id] = r.role; });
+
       const map: Record<string, any> = {};
-      profs?.forEach(p => { map[p.user_id] = p; });
+      profsRes.data?.forEach(p => { 
+        map[p.user_id] = { ...p, app_role: rolesMap[p.user_id] || 'student' }; 
+      });
       setProfiles(map);
+      
+      const studentVisits = data.filter(v => (rolesMap[v.patient_id] || 'student') === 'student');
+      setVisits(studentVisits);
+    } else {
+      setVisits([]);
     }
   }
 
@@ -237,10 +249,14 @@ export default function Consultations() {
                 <Card key={visit.id} className="hover:shadow-md transition-shadow overflow-hidden">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-lg truncate">{profile?.full_name || 'Unknown User'}</CardTitle>
+                      <CardTitle className="text-lg truncate flex items-center flex-wrap gap-2">
+                        <span>{profile?.full_name || 'Unknown User'}</span>
+                        {profile?.app_role === 'staff' && <Badge variant="secondary" className="text-[10px] py-0 h-4">Staff</Badge>}
+                        {profile?.app_role === 'admin' && <Badge variant="destructive" className="text-[10px] py-0 h-4">Admin</Badge>}
+                      </CardTitle>
                       <Badge variant="outline" className="bg-info/10 text-info border-info/30 shrink-0">In Consultation</Badge>
                     </div>
-                    {profile?.student_id && <p className="text-xs text-muted-foreground mt-1">{profile.student_id}</p>}
+                    {profile?.student_id && profile?.app_role === 'student' && <p className="text-xs text-muted-foreground mt-1">{profile.student_id}</p>}
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="text-sm">

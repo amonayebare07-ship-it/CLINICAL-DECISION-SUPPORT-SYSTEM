@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Heart, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Heart, Loader2, Eye, EyeOff, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import campusBg from '@/assets/bbu-campus-7.png';
 
-type SignupRole = 'student' | 'staff';
+type SignupRole = 'student' | 'staff' | 'admin';
 
 const FACULTIES = [
   'Faculty of Science and Technology',
@@ -73,16 +73,21 @@ export default function Auth() {
             emailRedirectTo: window.location.origin,
             data: {
               full_name: fullName,
-              student_id: signupRole === 'student' ? studentId : null,
-              signup_role: signupRole,
-              faculty: signupRole === 'student' ? faculty : null,
+              student_id: signupRole === 'admin' ? 'ADMIN-REQ' : (signupRole === 'student' ? studentId : null),
+              signup_role: signupRole === 'admin' ? 'student' : signupRole,
+              requested_admin: signupRole === 'admin',
+              faculty: signupRole === 'admin' ? 'Admin Request' : (signupRole === 'student' ? faculty : null),
               gender,
               course: signupRole === 'student' ? course : null,
             },
           },
         });
         if (error) throw error;
-        toast.success('Account created! Welcome to BBUC CDSS.');
+        if (signupRole === 'admin') {
+          toast.success('Admin account requested. Please wait for the Super Admin to manually approve your access.', { duration: 5000 });
+        } else {
+          toast.success('Account created! Welcome to BBUC CDSS.');
+        }
         navigate('/dashboard');
       }
     } catch (error: any) {
@@ -141,8 +146,24 @@ export default function Auth() {
                       >
                         Nurse / Staff
                       </Button>
+                      <Button
+                        type="button"
+                        variant={signupRole === 'admin' ? 'default' : 'outline'}
+                        className="flex-1"
+                        onClick={() => setSignupRole('admin')}
+                      >
+                        Admin
+                      </Button>
                     </div>
                   </div>
+                  
+                  {signupRole === 'admin' && (
+                    <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm p-3 rounded-lg flex gap-2 items-start mt-2">
+                      <Shield className="w-5 h-5 shrink-0 text-amber-600" />
+                      <p><strong>Manual Approval Required:</strong> Admin accounts must be approved by the Super Admin (Amon@gmail.com). You will have basic system access until manually upgraded.</p>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name</Label>
                     <Input id="fullName" value={fullName} onChange={e => setFullName(e.target.value)} required placeholder="John Doe" />

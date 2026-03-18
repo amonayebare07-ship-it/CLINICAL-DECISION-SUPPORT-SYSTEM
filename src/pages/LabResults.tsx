@@ -39,8 +39,16 @@ export default function LabResults() {
       const { data } = await supabase.from('lab_results' as any).select('*').eq('patient_id', user!.id).order('created_at', { ascending: false });
       setResults((data as any[]) || []);
     } else {
-      const { data } = await supabase.from('profiles').select('*').order('full_name');
-      setPatients(data || []);
+      const [profilesRes, rolesRes] = await Promise.all([
+        supabase.from('profiles').select('*').order('full_name'),
+        supabase.from('user_roles').select('*')
+      ]);
+      const profiles = profilesRes.data || [];
+      const rolesMap: Record<string, string> = {};
+      rolesRes.data?.forEach(r => { rolesMap[r.user_id] = r.role; });
+      
+      const patientsOnly = profiles.filter(p => (rolesMap[p.user_id] || 'student') === 'student');
+      setPatients(patientsOnly);
     }
   }
 

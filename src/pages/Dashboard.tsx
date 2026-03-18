@@ -140,7 +140,10 @@ export default function Dashboard() {
     return (
       <DashboardLayout>
         <div className="animate-fade-in">
-          <h1 className="font-serif text-3xl font-bold text-foreground mb-2">My Health Dashboard</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="font-serif text-3xl font-bold text-foreground">My Health Dashboard</h1>
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 shrink-0">Student</Badge>
+          </div>
           <p className="text-muted-foreground mb-8">Track your health visits and appointments</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
             <StatBox icon={ClipboardList} label="Total Visits" value={stats.visits} color="primary" />
@@ -184,10 +187,19 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <h1 className="font-serif text-2xl font-bold text-foreground">
-              Welcome back, {profile?.full_name?.split(' ')[0] || user?.email || 'User'} 👋
-            </h1>
-            <p className="text-muted-foreground text-sm">
+            <div className="flex items-center gap-3">
+              <h1 className="font-serif text-2xl font-bold text-foreground">
+                Welcome back, {profile?.full_name?.split(' ')[0] || user?.email || 'User'} 👋
+              </h1>
+              {user?.email?.toLowerCase() === 'amon@gmail.com' ? (
+                <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/30 shrink-0">Super Admin Dashboard</Badge>
+              ) : role === 'admin' ? (
+                <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/30 shrink-0">Admin Dashboard</Badge>
+              ) : (
+                <Badge variant="secondary" className="bg-info/10 text-info border-info/30 shrink-0">Nurse / Staff Dashboard</Badge>
+              )}
+            </div>
+            <p className="text-muted-foreground text-sm mt-1">
               Ready for another great day? Here's your clinical overview.
             </p>
           </div>

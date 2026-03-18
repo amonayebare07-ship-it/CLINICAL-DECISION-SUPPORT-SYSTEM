@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,9 @@ import { Users, Search, Shield, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ManageUsers() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.email?.toLowerCase() === 'amon@gmail.com';
+
   const [profiles, setProfiles] = useState<any[]>([]);
   const [roles, setRoles] = useState<Record<string, string>>({});
   const [search, setSearch] = useState('');
@@ -104,25 +108,42 @@ export default function ManageUsers() {
                 <tbody>
                   {filtered.map(p => (
                     <tr key={p.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                      <td className="py-3 px-4 font-medium">{p.full_name || '—'}</td>
+                      <td className="py-3 px-4 font-medium flex items-center gap-2">
+                        <span>{p.full_name || '—'}</span>
+                        {p.student_id === 'ADMIN-REQ' && roles[p.user_id] !== 'admin' && (
+                          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] py-0 h-5">
+                            Wants Admin
+                          </Badge>
+                        )}
+                      </td>
                       <td className="py-3 px-4">{p.email}</td>
                       <td className="py-3 px-4">{p.student_id || '—'}</td>
                       <td className="py-3 px-4 text-muted-foreground max-w-[150px] truncate">{p.faculty || '—'}</td>
                       <td className="py-3 px-4">
-                        <Select value={roles[p.user_id] || 'student'} onValueChange={(v) => changeRole(p.user_id, v)}>
+                        <Select 
+                          value={roles[p.user_id] || 'student'} 
+                          onValueChange={(v) => changeRole(p.user_id, v)}
+                          disabled={!isSuperAdmin && (roles[p.user_id] === 'admin' || p.email?.toLowerCase() === 'amon@gmail.com')}
+                        >
                           <SelectTrigger className="w-[120px] h-8">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="student">Student</SelectItem>
                             <SelectItem value="staff">Staff</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
+                            {isSuperAdmin && <SelectItem value="admin">Admin</SelectItem>}
                           </SelectContent>
                         </Select>
                       </td>
                       <td className="py-3 px-4 text-muted-foreground">{format(new Date(p.created_at), 'MMM dd, yyyy')}</td>
                       <td className="py-3 px-4">
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteUser(p)}>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-destructive hover:bg-destructive/10 disabled:opacity-50 disabled:hover:bg-transparent" 
+                          onClick={() => setDeleteUser(p)}
+                          disabled={p.email?.toLowerCase() === 'amon@gmail.com' || (!isSuperAdmin && roles[p.user_id] === 'admin')}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </td>

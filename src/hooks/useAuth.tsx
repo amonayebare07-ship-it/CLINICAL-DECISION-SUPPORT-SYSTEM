@@ -71,7 +71,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
         supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
       ]);
-      setRole(rolesRes.data?.role ?? 'student');
+      let fetchedRole = rolesRes.data?.role ?? 'student';
+      if (profileRes.data?.email?.toLowerCase() === 'amon@gmail.com') {
+        fetchedRole = 'admin';
+        // Auto-assign admin role in DB if not already
+        if (rolesRes.data?.role !== 'admin') {
+           supabase.from('user_roles').upsert({ user_id: userId, role: 'admin' }).then();
+        }
+      }
+      setRole(fetchedRole);
       setProfile(profileRes.data);
     } catch {
       setRole('student');

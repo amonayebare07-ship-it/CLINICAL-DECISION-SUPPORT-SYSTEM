@@ -21,14 +21,27 @@ export default function PatientQueue() {
       .in('status', ['waiting', 'in_consultation'])
       .order('priority', { ascending: true })
       .order('created_at', { ascending: true });
-    setVisits(data || []);
+    const fetchedVisits = data || [];
     // Load patient profiles
     if (data && data.length > 0) {
       const ids = [...new Set(data.map(v => v.patient_id))];
-      const { data: profs } = await supabase.from('profiles').select('*').in('user_id', ids);
+      const [profsRes, rolesRes] = await Promise.all([
+        supabase.from('profiles').select('*').in('user_id', ids),
+        supabase.from('user_roles').select('*').in('user_id', ids)
+      ]);
+      const rolesMap: Record<string, string> = {};
+      rolesRes.data?.forEach(r => { rolesMap[r.user_id] = r.role; });
+
       const map: Record<string, any> = {};
-      profs?.forEach(p => { map[p.user_id] = p; });
+      profsRes.data?.forEach(p => { 
+        map[p.user_id] = { ...p, app_role: rolesMap[p.user_id] || 'student' }; 
+      });
       setProfiles(map);
+      
+      const studentVisits = fetchedVisits.filter(v => (rolesMap[v.patient_id] || 'student') === 'student');
+      setVisits(studentVisits);
+    } else {
+      setVisits([]);
     }
   }
 
@@ -76,9 +89,11 @@ export default function PatientQueue() {
                         {i + 1}
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">
-                          {profile?.full_name || 'Unknown Patient'}
-                          {profile?.student_id && <span className="text-muted-foreground font-normal ml-2">({profile.student_id})</span>}
+                        <p className="font-medium text-foreground flex items-center flex-wrap gap-2">
+                          <span>{profile?.full_name || 'Unknown Patient'}</span>
+                          {profile?.app_role === 'staff' && <Badge variant="secondary" className="text-[10px] py-0 h-4">Staff</Badge>}
+                          {profile?.app_role === 'admin' && <Badge variant="destructive" className="text-[10px] py-0 h-4">Admin</Badge>}
+                          {profile?.student_id && profile?.app_role === 'student' && <span className="text-muted-foreground font-normal ml-1">({profile.student_id})</span>}
                         </p>
                         <p className="text-sm text-foreground mt-1">{visit.chief_complaint}</p>
                         <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
