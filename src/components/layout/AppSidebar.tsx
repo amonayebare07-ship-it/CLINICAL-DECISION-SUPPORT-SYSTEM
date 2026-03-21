@@ -1,5 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
+import InstallPrompt from '../InstallPrompt';
 import {
   Home, FileText, Calendar, ClipboardList, Users, Package,
   BarChart3, LogOut, Heart, Stethoscope, FolderOpen, FlaskConical, Settings
@@ -80,6 +81,7 @@ export default function AppSidebar() {
       </nav>
 
       <div className="p-4 border-t border-sidebar-border">
+        <InstallPrompt />
         <div className="mb-3 px-4">
           <p className="text-sm font-medium truncate">{profile?.full_name || user?.email || 'User'}</p>
           <p className="text-xs opacity-70 truncate">{user?.email}</p>
